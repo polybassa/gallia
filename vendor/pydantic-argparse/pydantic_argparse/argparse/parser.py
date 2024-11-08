@@ -87,7 +87,7 @@ class ArgumentParser(argparse.ArgumentParser, Generic[PydanticModelT]):
             exit_on_error=exit_on_error,
             add_help=False,  # Always disable the automatic help flag.
             argument_default=argparse.SUPPRESS,  # Allow `pydantic` to handle defaults.
-            formatter_class=argparse.RawTextHelpFormatter
+            formatter_class=argparse.RawTextHelpFormatter,
         )
 
         # Set Version, Add Help and Exit on Error Flag
@@ -221,12 +221,13 @@ class ArgumentParser(argparse.ArgumentParser, Generic[PydanticModelT]):
 
         msg = f"error: {message}\n"
 
+        # TODO: Investigate why this function is called twice when exit_on_error is respected
         # Check whether parser should exit
-        if self.exit_on_error:
-            self.exit(ArgumentParser.EXIT_ERROR, msg)
+        # if self.exit_on_error:
+        self.exit(ArgumentParser.EXIT_ERROR, msg)
 
         # Raise Error
-        raise argparse.ArgumentError(None, msg)
+        # raise argparse.ArgumentError(None, msg)
 
     def _commands(self) -> argparse._SubParsersAction:
         """Creates and Retrieves Subcommands Action for the ArgumentParser.

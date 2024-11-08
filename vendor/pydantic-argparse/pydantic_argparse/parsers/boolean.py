@@ -10,7 +10,6 @@ function, which parses boolean `pydantic` model fields to `ArgumentParser`
 command-line arguments.
 """
 
-
 from pydantic_argparse.argparse import actions
 from pydantic_argparse.utils.pydantic import PydanticField
 

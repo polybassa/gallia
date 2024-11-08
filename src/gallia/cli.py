@@ -35,37 +35,51 @@ _CLASS_ATTR = "_dynamic_gallia_command_class_reference"
 
 
 def _create_parser_from_command(
-    command: type[BaseCommand], config: Config, extra_defaults: defaults
-) -> tuple[type[PydanticBaseCommand], defaults]:
+    command: type[BaseCommand], config: Config, extra_defaults: defaults, model_counter: int = 0
+) -> tuple[type[PydanticBaseCommand], defaults, int]:
     config_attributes = command.CONFIG_TYPE.attributes_from_config(config)
     env_attributes = command.CONFIG_TYPE.attributes_from_env()
     config_attributes.update(env_attributes)
-    extra_defaults[command.CONFIG_TYPE] = config_attributes
-    setattr(command.CONFIG_TYPE, _CLASS_ATTR, command)
 
-    return command.CONFIG_TYPE, extra_defaults
+    # it is necessary to create a submodel, because several commands can use the same config
+    # (e.g. of their base class if no additional arguments are required)
+    model_type = create_model(
+        f"_dynamic_{command.CONFIG_TYPE}_{model_counter}", __base__=command.CONFIG_TYPE
+    )
+    extra_defaults[model_type] = config_attributes
+
+    setattr(model_type, _CLASS_ATTR, command)
+
+    return model_type, extra_defaults, model_counter
 
 
 def _create_parser_from_tree(
     command_tree: CommandTree, config: Config, extra_defaults: defaults, model_counter: int = 0
-) -> tuple[type[PydanticBaseCommand], defaults]:
+) -> tuple[type[PydanticBaseCommand], defaults, int]:
     model_name = f"_dynamic_gallia_hierarchy_model_{model_counter}"
     args: MutableMapping[str, tuple[type | UnionType, Any]] = {}
 
     for key, value in command_tree.subtree.items():
+        model_counter += 1
+
         if isinstance(value, CommandTree):
-            model_counter += 1
-            model_type, extra_defaults = _create_parser_from_tree(
+            model_type, extra_defaults, model_counter = _create_parser_from_tree(
                 value, config, extra_defaults, model_counter
             )
             description = value.description
         else:
-            model_type, extra_defaults = _create_parser_from_command(value, config, extra_defaults)
+            model_type, extra_defaults, model_counter = _create_parser_from_command(
+                value, config, extra_defaults, model_counter
+            )
             description = value.SHORT_HELP
 
         args[key] = (model_type | None, Field(None, description=description))
 
-    return create_model(model_name, __base__=PydanticBaseCommand, **args), extra_defaults  # type: ignore[call-overload]
+    return (
+        create_model(model_name, __base__=PydanticBaseCommand, **args),
+        extra_defaults,
+        model_counter,
+    )  # type: ignore[call-overload]
 
 
 def create_parser(
@@ -85,9 +99,9 @@ def create_parser(
 
     if isinstance(commands, Mapping):
         command_tree = CommandTree("", subtree=commands)
-        model, extra_defaults = _create_parser_from_tree(command_tree, config, {})
+        model, extra_defaults, _ = _create_parser_from_tree(command_tree, config, {})
     else:
-        model, extra_defaults = _create_parser_from_command(commands, config, {})
+        model, extra_defaults, _ = _create_parser_from_command(commands, config, {})
 
     return ArgumentParser(model=model, extra_defaults=extra_defaults)
 
@@ -186,6 +200,7 @@ def main() -> None:
             "show-config": show_config,
             "template": template,
         },
+        show_help_on_zero_args=False,
     )
 
 

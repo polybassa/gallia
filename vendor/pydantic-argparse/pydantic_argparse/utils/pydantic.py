@@ -9,9 +9,9 @@ internals of `pydantic`, such as constructing field validators, updating
 field validator dictionaries and constructing new model classes with
 dynamically generated validators and environment variable parsers.
 """
-import sys
+
 from collections.abc import Container
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from types import UnionType
 from typing import (
@@ -25,7 +25,8 @@ from typing import (
     Union,
     cast,
     get_args,
-    get_origin, Annotated,
+    get_origin,
+    Annotated,
 )
 
 from pydantic import BaseModel
@@ -73,7 +74,7 @@ class PydanticField:
         if origin is Literal or isinstance(origin, type) and issubclass(origin, Container):
             return origin
         elif origin is Union or origin is UnionType:
-            args = get_args(self.info.annotation)
+            args = get_args(annotation)
             types = list(arg for arg in args if arg is not NoneType)
         elif origin is None:
             types = [annotation]

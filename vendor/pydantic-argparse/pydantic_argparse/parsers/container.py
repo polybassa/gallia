@@ -45,7 +45,7 @@ def parse_field(
     parser.add_argument(
         *field.arg_names(),
         action=argparse._StoreAction,
-        nargs=argparse.ONE_OR_MORE,
+        nargs=argparse.ZERO_OR_MORE,
         help=field.description(),
         metavar=field.metavar(),
         **field.arg_required(),
@@ -53,4 +53,3 @@ def parse_field(
         **field.arg_const(),
         **field.arg_dest(),
     )
-

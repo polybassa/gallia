@@ -117,9 +117,6 @@ LiteralType = TypeVar("LiteralType")
 
 
 def auto_enum(x: str, enum_type: type[EnumType]) -> EnumType:
-    print(x)
-    print(enum_type)
-
     try:
         return enum_type[x]
     except KeyError:

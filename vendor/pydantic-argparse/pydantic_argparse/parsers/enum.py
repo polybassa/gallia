@@ -12,7 +12,6 @@ command-line arguments.
 
 import argparse
 import enum
-from typing import Type, cast
 
 from pydantic_argparse.utils.pydantic import PydanticField
 
@@ -44,7 +43,7 @@ def parse_field(
         field (PydanticField): Field to be added to parser.
     """
     # Extract Enum
-    enum_type = cast(Type[enum.Enum], field.info.annotation)
+    enum_type = field.get_type()[0]
 
     # Determine Argument Properties
     metavar = enum_type.__name__
