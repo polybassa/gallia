@@ -76,10 +76,10 @@ def _create_parser_from_tree(
         args[key] = (model_type | None, Field(None, description=description))
 
     return (
-        create_model(model_name, __base__=PydanticBaseCommand, **args),
+        create_model(model_name, __base__=PydanticBaseCommand, **args),  # type: ignore[call-overload]
         extra_defaults,
         model_counter,
-    )  # type: ignore[call-overload]
+    )
 
 
 def create_parser(
