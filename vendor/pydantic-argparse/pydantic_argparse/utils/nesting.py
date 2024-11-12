@@ -5,7 +5,7 @@
 """Utilities to help with parsing arbitrarily nested `pydantic` models."""
 
 from argparse import Namespace
-from typing import Any, Dict, Generic, Tuple, Type
+from typing import Any, Dict, Generic, Tuple, Type, TypeAlias
 
 from boltons.iterutils import get_path, remap
 from pydantic import BaseModel
@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from .namespaces import to_dict
 from .pydantic import PydanticField, PydanticModelT
 
-ModelT = PydanticModelT | Type[PydanticModelT] | BaseModel | Type[BaseModel]
+ModelT: TypeAlias = PydanticModelT | Type[PydanticModelT] | BaseModel | Type[BaseModel]
 
 
 class _NestedArgumentParser(Generic[PydanticModelT]):
@@ -26,21 +26,23 @@ class _NestedArgumentParser(Generic[PydanticModelT]):
     ) -> None:
         self.model = model
         self.args = to_dict(namespace)
-        self.subcommand_path: tuple[str] = tuple()
-        self.schema: Dict[str, Any] = self._get_nested_model_fields(self.model, namespace)
+        self.subcommand_path: tuple[str, ...] = tuple()
+        self.schema: dict[str, Any] = self._get_nested_model_fields(self.model, namespace)
         self.schema = self._remove_null_leaves(self.schema)
 
-    def _get_nested_model_fields(self, model: ModelT, namespace: Namespace):
-        def contains_subcommand(ns: Namespace, subcommand_path: Tuple[str]):
+    def _get_nested_model_fields(self, model: ModelT, namespace: Namespace) -> dict[str, Any]:
+        def contains_subcommand(ns: Namespace, subcommand_path: tuple[str, ...]) -> bool:
             for step in subcommand_path:
-                ns = getattr(ns, step, None)
+                tmp = getattr(ns, step, None)
 
-                if not isinstance(ns, Namespace):
+                if not isinstance(tmp, Namespace):
                     return False
+
+                ns = tmp
 
             return True
 
-        model_fields: Dict[str, Any] = dict()
+        model_fields: dict[str, Any] = dict()
 
         for field in PydanticField.parse_model(model):
             key = field.name
@@ -70,7 +72,7 @@ class _NestedArgumentParser(Generic[PydanticModelT]):
 
         return model_fields
 
-    def _remove_null_leaves(self, schema: Dict[str, Any]):
+    def _remove_null_leaves(self, schema: dict[str, Any]) -> Any:
         # only remove None leaves
         # actually CANNOT remove empty containers
         # this causes problems with nested submodels that don't
@@ -80,7 +82,7 @@ class _NestedArgumentParser(Generic[PydanticModelT]):
         # the schema
         return remap(schema, visit=lambda p, k, v: v is not None)
 
-    def validate(self) -> Tuple[PydanticModelT, BaseModel]:
+    def validate(self) -> tuple[PydanticModelT, BaseModel]:
         """Return the root of the model, as well as the sub-model for the bottom subcommand"""
         model = self.model.model_validate(self.schema)
         subcommand = model

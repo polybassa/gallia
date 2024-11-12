@@ -13,6 +13,7 @@ whether this module should be used to parse the field, as well as the
 import argparse
 import collections.abc
 import enum
+from typing import Any
 
 from pydantic_argparse.utils.pydantic import PydanticField
 
@@ -42,14 +43,17 @@ def parse_field(
         parser (argparse.ArgumentParser): Argument parser to add to.
         field (PydanticField): Field to be added to parser.
     """
+    args: dict[str, Any] = {}
+    args.update(field.arg_required())
+    args.update(field.arg_default())
+    args.update(field.arg_const())
+    args.update(field.arg_dest())
+
     parser.add_argument(
         *field.arg_names(),
         action=argparse._StoreAction,
         nargs=argparse.ZERO_OR_MORE,
         help=field.description(),
         metavar=field.metavar(),
-        **field.arg_required(),
-        **field.arg_default(),
-        **field.arg_const(),
-        **field.arg_dest(),
+        **args,
     )

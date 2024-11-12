@@ -12,6 +12,7 @@ command-line arguments.
 
 import argparse
 import enum
+from typing import Any
 
 from pydantic_argparse.utils.pydantic import PydanticField
 
@@ -43,9 +44,16 @@ def parse_field(
         field (PydanticField): Field to be added to parser.
     """
     # Extract Enum
-    enum_type = field.get_type()[0]
+    types = field.get_type()
+    assert types is not None
+
+    if isinstance(types, tuple):
+        enum_type = types[0]
+    else:
+        enum_type = types
 
     # Determine Argument Properties
+    assert enum_type is not None
     metavar = enum_type.__name__
 
     if isinstance(field.info, ArgFieldInfo) and field.info.metavar is not None:
@@ -53,14 +61,11 @@ def parse_field(
 
     action = argparse._StoreAction
 
+    args: dict[str, Any] = {}
+    args.update(field.arg_required())
+    args.update(field.arg_default())
+    args.update(field.arg_const())
+    args.update(field.arg_dest())
+
     # Add Enum Field
-    parser.add_argument(
-        *field.arg_names(),
-        action=action,
-        help=field.description(),
-        metavar=metavar,
-        **field.arg_required(),
-        **field.arg_default(),
-        **field.arg_const(),
-        **field.arg_dest(),
-    )
+    parser.add_argument(*field.arg_names(), action=action, help=field.description(), metavar=metavar, **args)

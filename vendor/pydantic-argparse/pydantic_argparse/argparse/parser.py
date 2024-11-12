@@ -20,7 +20,7 @@ be compatible with an IDE, linter or type checker.
 
 import argparse
 import sys
-from typing import Generic, List, NoReturn, Optional, Tuple, Type, Any
+from typing import Generic, List, NoReturn, Optional, Tuple, Type, Any, Never
 
 from pydantic import BaseModel, ValidationError
 
@@ -59,14 +59,14 @@ class ArgumentParser(argparse.ArgumentParser, Generic[PydanticModelT]):
 
     def __init__(
         self,
-        model: Type[PydanticModelT],
-        prog: Optional[str] = None,
-        description: Optional[str] = None,
-        version: Optional[str] = None,
-        epilog: Optional[str] = None,
+        model: type[PydanticModelT],
+        prog: str | None = None,
+        description: str | None = None,
+        version: str | None = None,
+        epilog: str | None = None,
         add_help: bool = True,
         exit_on_error: bool = True,
-        extra_defaults: dict[Type, dict[str, tuple[str, Any]]] | None = None,
+        extra_defaults: dict[type, dict[str, tuple[str, Any]]] | None = None,
     ) -> None:
         """Instantiates the Typed Argument Parser with its `pydantic` model.
 
@@ -101,7 +101,8 @@ class ArgumentParser(argparse.ArgumentParser, Generic[PydanticModelT]):
 
         # Add Arguments from Model
         self._submodels: dict[str, Type[BaseModel]] = dict()
-        self.model = self._add_model(model)
+        self.model = model
+        self._add_model(model)
 
         self._help_group = self.add_argument_group(ArgumentParser.HELP)
 
@@ -125,8 +126,8 @@ class ArgumentParser(argparse.ArgumentParser, Generic[PydanticModelT]):
 
     def parse_typed_args(
         self,
-        args: Optional[List[str]] = None,
-    ) -> Tuple[PydanticModelT, BaseModel]:
+        args: list[str] | None = None,
+    ) -> tuple[PydanticModelT, BaseModel]:
         """Parses command line arguments.
 
         If `args` are not supplied by the user, then they are automatically
@@ -153,7 +154,7 @@ class ArgumentParser(argparse.ArgumentParser, Generic[PydanticModelT]):
             # to report it to the user
             self.validation_error(exc, nested_parser)
 
-    def validation_error(self, error: ValidationError, parser: _NestedArgumentParser):
+    def validation_error(self, error: ValidationError, parser: _NestedArgumentParser) -> Never:
         self.print_usage(sys.stderr)
 
         model = parser.model
@@ -179,6 +180,8 @@ class ArgumentParser(argparse.ArgumentParser, Generic[PydanticModelT]):
             # which equals the name of the field
             if len(sources) > 0:
                 argument = sources[0]
+
+                assert isinstance(argument, str)
 
                 if (
                     self.extra_defaults is not None
@@ -274,12 +277,8 @@ class ArgumentParser(argparse.ArgumentParser, Generic[PydanticModelT]):
         self,
         model: Type[BaseModel],
         arg_group: Optional[argparse._ArgumentGroup] = None,
-    ) -> Type[BaseModel]:
+    ) -> None:
         """Adds the `pydantic` model to the argument parser.
-
-        This method also generates "validators" for the arguments derived from
-        the `pydantic` model, and generates a new subclass from the model
-        containing these validators.
 
         Args:
             model (Type[PydanticModelT]): Pydantic model class to add to the
@@ -288,9 +287,6 @@ class ArgumentParser(argparse.ArgumentParser, Generic[PydanticModelT]):
                 This should not normally be passed manually, but only during
                 recursion if the original model is a nested pydantic model. These
                 nested models are then parsed as argument groups.
-
-        Returns:
-            Type[PydanticModelT]: Pydantic model possibly with new validators.
         """
         # Initialise validators dictionary
         parser = self if arg_group is None else arg_group
@@ -339,5 +335,3 @@ class ArgumentParser(argparse.ArgumentParser, Generic[PydanticModelT]):
 
                 if not added:
                     parsers.add_field(parser, field)
-
-        return model

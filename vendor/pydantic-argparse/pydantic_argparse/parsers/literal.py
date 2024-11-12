@@ -17,7 +17,7 @@ from pydantic_argparse.utils.pydantic import PydanticField
 from .utils import SupportsAddArgument
 from ..utils.field import ArgFieldInfo
 
-from typing import Literal, get_args
+from typing import Literal, get_args, Any
 
 
 def should_parse(field: PydanticField) -> bool:
@@ -53,14 +53,11 @@ def parse_field(
 
     action = argparse._StoreAction
 
+    args: dict[str, Any] = {}
+    args.update(field.arg_required())
+    args.update(field.arg_default())
+    args.update(field.arg_const())
+    args.update(field.arg_dest())
+
     # Add Literal Field
-    parser.add_argument(
-        *field.arg_names(),
-        action=action,
-        help=field.description(),
-        metavar=metavar,
-        **field.arg_required(),
-        **field.arg_default(),
-        **field.arg_const(),
-        **field.arg_dest(),
-    )
+    parser.add_argument(*field.arg_names(), action=action, help=field.description(), metavar=metavar, **args)

@@ -68,7 +68,7 @@ class PydanticField:
         for name, info in model.model_fields.items():
             yield cls(name, info)
 
-    def _get_type(self, annotation: type | None) -> Union[Type, Tuple[Type, ...], None]:
+    def _get_type(self, annotation: type | None) -> type | tuple[type | None, ...] | None:
         origin = get_origin(annotation)
 
         if origin is Literal or isinstance(origin, type) and issubclass(origin, Container):
@@ -81,7 +81,7 @@ class PydanticField:
         else:
             assert False, f"Unsupported origin {origin} for field {self.name} with annotation {annotation}"
 
-        base_types = []
+        base_types: list[Type | None] = []
 
         for t in types:
             origin = get_origin(t)
@@ -100,7 +100,7 @@ class PydanticField:
 
         return tuple(base_types)
 
-    def get_type(self) -> Union[Type, Tuple[Type, ...], None]:
+    def get_type(self) -> type | tuple[type | None, ...] | None:
         """Return the type annotation for the `pydantic` field.
 
         Returns:
@@ -109,7 +109,7 @@ class PydanticField:
         annotation = self.info.annotation
         return self._get_type(annotation)
 
-    def is_a(self, types: Union[Any, Tuple[Any, ...]]) -> bool:
+    def is_a(self, types: Any | tuple[Any, ...]) -> bool:
         """Checks whether the subject *is* any of the supplied types.
 
         The checks are performed as follows:
@@ -251,7 +251,7 @@ class PydanticField:
         description = self.info.description if self.info.description is not None else ""
         return f"{description}{default}"
 
-    def metavar(self) -> Optional[str]:
+    def metavar(self) -> str | None:
         """Generate the metavar name for the field.
 
         Returns:
@@ -268,10 +268,12 @@ class PydanticField:
 
         # otherwise default to the type
         field_type = self.get_type()
-        if field_type:
+        if field_type is not None:
             if isinstance(field_type, tuple):
-                return "|".join(t.__name__.upper() for t in field_type)
+                return "|".join(t.__name__.upper() for t in field_type if t is not None)
             return field_type.__name__.upper()
+        else:
+            return None
 
     def arg_required(self) -> dict[str, bool]:
         return (
