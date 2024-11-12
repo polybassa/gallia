@@ -20,7 +20,7 @@ be compatible with an IDE, linter or type checker.
 
 import argparse
 import sys
-from typing import Generic, List, NoReturn, Optional, Tuple, Type, Any, Never
+from typing import Generic, NoReturn, Optional, Type, Any, Never
 
 from pydantic import BaseModel, ValidationError
 

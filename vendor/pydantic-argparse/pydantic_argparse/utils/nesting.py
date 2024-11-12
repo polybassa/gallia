@@ -5,7 +5,7 @@
 """Utilities to help with parsing arbitrarily nested `pydantic` models."""
 
 from argparse import Namespace
-from typing import Any, Dict, Generic, Tuple, Type, TypeAlias
+from typing import Any, Generic, Type, TypeAlias
 
 from boltons.iterutils import get_path, remap
 from pydantic import BaseModel

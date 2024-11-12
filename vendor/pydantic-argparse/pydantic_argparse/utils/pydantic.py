@@ -18,8 +18,6 @@ from typing import (
     Any,
     Iterator,
     Literal,
-    Optional,
-    Tuple,
     Type,
     TypeVar,
     Union,
