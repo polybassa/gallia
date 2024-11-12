@@ -143,10 +143,6 @@ def parse_and_run(
 
     parser = create_parser(commands)
 
-    if show_help_on_zero_args and len(sys.argv) == 1:
-        parser.print_help(sys.stderr)
-        sys.exit(exitcodes.USAGE)
-
     def make_f(c: Callable[[], None]) -> Callable[[Any], None]:
         def f(_: Any) -> None:
             c()
@@ -172,6 +168,10 @@ def parse_and_run(
             parser.add_argument(
                 name if name.startswith("-") else f"--{name}", nargs=0, action=Action
             )
+
+    if show_help_on_zero_args and len(sys.argv) == 1:
+        parser.print_help(sys.stderr)
+        sys.exit(exitcodes.USAGE)
 
     if auto_complete:
         argcomplete.autocomplete(parser)
@@ -200,7 +200,7 @@ def main() -> None:
             "show-config": show_config,
             "template": template,
         },
-        show_help_on_zero_args=False,
+        show_help_on_zero_args=True,
     )
 
 
