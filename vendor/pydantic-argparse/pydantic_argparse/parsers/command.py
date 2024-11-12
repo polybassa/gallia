@@ -46,7 +46,7 @@ def parse_field(
     subparser.add_parser(
         field.info.title or field.info.alias or field.name,
         help=field.info.description,
-        model=field.model_type,  # type: ignore[call-arg]
+        model=field.model_type,
         exit_on_error=False,  # Allow top level parser to handle exiting
         extra_defaults=extra_defaults,
     )
