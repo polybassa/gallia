@@ -50,6 +50,8 @@ class SessionsScanner(UDSScanner):
         super().__init__(config)
         self.config: SessionsScannerConfig = config
 
+        self.result: list[int] = []
+
     async def set_session_with_hooks_handling(
         self, session: int, use_hooks: bool
     ) -> NegativeResponse | DiagnosticSessionControlResponse:
@@ -100,7 +102,6 @@ class SessionsScanner(UDSScanner):
         return True
 
     async def main(self) -> None:
-        self.result: list[int] = []
         found: dict[int, list[list[int]]] = {0: [[0x01]]}
         positive_results: list[dict[str, Any]] = []
         negative_results: list[dict[str, Any]] = []

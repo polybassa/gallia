@@ -49,8 +49,9 @@ class ServicesScanner(UDSScanner):
         super().__init__(config)
         self.config: ServicesScannerConfig = config
 
-    async def main(self) -> None:
         self.result: list[tuple[int, int]] = []
+
+    async def main(self) -> None:
         self.ecu.max_retry = 0
         found: dict[int, dict[int, Any]] = {}
 

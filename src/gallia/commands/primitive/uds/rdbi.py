@@ -33,6 +33,7 @@ class ReadByIdentifierPrimitive(UDSScanner):
     def __init__(self, config: ReadByIdentifierPrimitiveConfig):
         super().__init__(config)
         self.config: ReadByIdentifierPrimitiveConfig = config
+        self.result: bytes | None = None
 
     async def main(self) -> None:
         try:
