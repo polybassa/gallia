@@ -20,8 +20,7 @@ class ArgFieldInfo(FieldInfo):
         hidden: bool,
         **kwargs: Unpack[_FromFieldInfoInputs],
     ):
-        """
-        Creates a new ArgFieldInfo.
+        """Creates a new ArgFieldInfo.
 
         This is a special variant of pydantic's FieldInfo, which adds several arguments,
         mainly related to CLI arguments.
@@ -58,8 +57,7 @@ def Field(
     hidden: bool = False,
     **kwargs: Unpack[_FromFieldInfoInputs],
 ) -> Any:
-    """
-    Creates a new ArgFieldInfo.
+    """Creates a new ArgFieldInfo.
 
     This is a special variant of pydantic's Field() function, which adds several arguments,
     mainly related to CLI arguments.

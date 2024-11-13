@@ -27,7 +27,6 @@ from typing import (
     Annotated,
 )
 
-from mypyc.ir.ops import Assign
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 from pydantic_core import PydanticUndefined
