@@ -18,19 +18,6 @@ from pydantic_argparse.utils.pydantic import (
 )
 
 
-def should_parse(field: PydanticField) -> bool:
-    """Checks whether the field should be parsed as a `command`.
-
-    Args:
-        field (PydanticField): Field to check.
-
-    Returns:
-        bool: Whether the field should be parsed as a `command`.
-    """
-    # Check and Return
-    return field.is_subcommand()
-
-
 def parse_field(
     subparser: argparse._SubParsersAction,
     field: PydanticField,
@@ -41,6 +28,7 @@ def parse_field(
     Args:
         subparser (argparse._SubParsersAction): Sub-parser to add to.
         field (PydanticField): Field to be added to parser.
+        extra_defaults: Defaults coming from external sources, such as environment variables or config files.
     """
     # Add Command
     subparser.add_parser(

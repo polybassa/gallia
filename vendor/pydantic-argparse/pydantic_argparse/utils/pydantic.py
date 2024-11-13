@@ -27,6 +27,7 @@ from typing import (
     Annotated,
 )
 
+from mypyc.ir.ops import Assign
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 from pydantic_core import PydanticUndefined
@@ -77,7 +78,7 @@ class PydanticField:
         elif origin is None:
             types = [annotation]
         else:
-            assert False, f"Unsupported origin {origin} for field {self.name} with annotation {annotation}"
+            raise AssertionError(f"Unsupported origin {origin} for field {self.name} with annotation {annotation}")
 
         base_types: list[Type | None] = []
 
@@ -99,10 +100,9 @@ class PydanticField:
         return tuple(base_types)
 
     def get_type(self) -> type | tuple[type | None, ...] | None:
-        """Return the type annotation for the `pydantic` field.
+        """Return the mainly interesting types according to the type annotation (in the context of argument parsing).
 
-        Returns:
-            Union[Type, Tuple[Type, ...], None]
+        Returns: One or more types (potentially None).
         """
         annotation = self.info.annotation
         return self._get_type(annotation)
@@ -202,12 +202,13 @@ class PydanticField:
     def arg_names(self, invert: bool = False) -> tuple[str, str] | tuple[str]:
         """Standardises argument name when printing to command line.
 
+        This also includes potential short names if specified.
+
         Args:
             invert (bool): Whether to invert the name by prepending `--no-`.
 
         Returns:
-            str: Standardised name of the argument. Checks `pydantic.Field` title first,
-                but defaults to the field name.
+            str: Standardised name of the argument.
         """
         name = self.info.title or self.name
 

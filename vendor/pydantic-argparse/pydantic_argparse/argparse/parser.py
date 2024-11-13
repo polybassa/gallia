@@ -68,7 +68,7 @@ class ArgumentParser(argparse.ArgumentParser, Generic[PydanticModelT]):
         exit_on_error: bool = True,
         extra_defaults: dict[type, dict[str, tuple[str, Any]]] | None = None,
     ) -> None:
-        """Instantiates the Typed Argument Parser with its `pydantic` model.
+        """Instantiates the typed Argument Parser with its `pydantic` model.
 
         :param model: Pydantic argument model class.
         :param prog: Program name for CLI.
@@ -112,18 +112,6 @@ class ArgumentParser(argparse.ArgumentParser, Generic[PydanticModelT]):
         if self.version:
             self._add_version_flag()
 
-    @property
-    def has_submodels(self) -> bool:  # noqa: D102
-        # this is for simple nested models as arg groups
-        has_submodels = len(self._submodels) > 0
-
-        # this is for nested commands
-        if self._subcommands is not None:
-            has_submodels = has_submodels or any(
-                len(subparser._submodels) > 0 for subparser in self._subcommands.choices.values()
-            )
-        return has_submodels
-
     def parse_typed_args(
         self,
         args: list[str] | None = None,
@@ -133,15 +121,8 @@ class ArgumentParser(argparse.ArgumentParser, Generic[PydanticModelT]):
         If `args` are not supplied by the user, then they are automatically
         retrieved from the `sys.argv` command-line arguments.
 
-        Args:
-            args (Optional[List[str]]): Optional list of arguments to parse.
-
-        Returns:
-            PydanticModelT: Populated instance of typed arguments model.
-
-        Raises:
-            argparse.ArgumentError: Raised upon error, if not exiting on error.
-            SystemExit: Raised upon error, if exiting on error.
+        :param args: Optional list of arguments to parse.
+        :return: A tuple of the whole parsed model, as well as the submodel representing the selected subcommand.
         """
         # Call Super Class Method
         namespace = self.parse_args(args)
@@ -152,9 +133,9 @@ class ArgumentParser(argparse.ArgumentParser, Generic[PydanticModelT]):
         except ValidationError as exc:
             # Catch exceptions, and use the ArgumentParser.error() method
             # to report it to the user
-            self.validation_error(exc, nested_parser)
+            self._validation_error(exc, nested_parser)
 
-    def validation_error(self, error: ValidationError, parser: _NestedArgumentParser) -> Never:
+    def _validation_error(self, error: ValidationError, parser: _NestedArgumentParser) -> Never:
         self.print_usage(sys.stderr)
 
         model = parser.model
@@ -276,12 +257,12 @@ class ArgumentParser(argparse.ArgumentParser, Generic[PydanticModelT]):
     def _add_model(
         self,
         model: Type[BaseModel],
-        arg_group: Optional[argparse._ArgumentGroup] = None,
+        arg_group: argparse._ArgumentGroup | None = None,
     ) -> None:
         """Adds the `pydantic` model to the argument parser.
 
         Args:
-            model (Type[PydanticModelT]): Pydantic model class to add to the
+            model (Type[BaseModel]): Pydantic model class to add to the
                 argument parser.
             arg_group: (Optional[argparse._ArgumentGroup]): argparse ArgumentGroup.
                 This should not normally be passed manually, but only during
